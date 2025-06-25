@@ -5,7 +5,7 @@ import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
 import { ERROR_CODES } from '@/configs/logs'
 import { logError } from '@/lib/clients/logger'
 import { returnServerError } from '@/lib/utils/action'
-import Sandbox from 'e2b'
+import Sandbox, { NotFoundError } from 'e2b'
 
 export const GetSandboxRootSchema = z.object({
   teamId: z.string().uuid(),
@@ -24,8 +24,10 @@ export const getSandboxRoot = authActionClient
 
     let entries
 
+    let sandbox: Sandbox | null = null
+
     try {
-      const sandbox = await Sandbox.connect(sandboxId, {
+      sandbox = await Sandbox.connect(sandboxId, {
         domain: process.env.NEXT_PUBLIC_E2B_DOMAIN,
         headers,
         secure: true,
@@ -37,6 +39,10 @@ export const getSandboxRoot = authActionClient
         type: e.type,
       }))
     } catch (err) {
+      if (err instanceof NotFoundError && sandbox) {
+        return returnServerError('ROOT_PATH_NOT_FOUND')
+      }
+
       logError(ERROR_CODES.E2B_SDK, 'files.list', err)
       return returnServerError('Failed to list root directory.')
     }
