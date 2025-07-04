@@ -11,12 +11,13 @@ import { uploadFile, deleteFile, getFiles } from '@/lib/clients/storage'
 import { authActionClient } from '@/lib/clients/action'
 import { returnServerError } from '@/lib/utils/action'
 import { zfd } from 'zod-form-data'
-import { logWarning } from '@/lib/clients/logger'
+import { l } from '@/lib/clients/logger'
 import { returnValidationErrors } from 'next-safe-action'
 import { getTeam } from './get-team'
 import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
 import { CreateTeamSchema, UpdateTeamNameSchema } from '@/server/team/types'
 import { CreateTeamsResponse } from '@/types/billing'
+import { ERROR_CODES } from '@/configs/logs'
 
 export const updateTeamNameAction = authActionClient
   .schema(UpdateTeamNameSchema)
@@ -277,7 +278,16 @@ export const uploadTeamProfilePictureAction = authActionClient
       .single()
 
     if (error) {
-      throw new Error(error.message)
+      l.error(
+        'UPLOAD_TEAM_PROFILE_PICTURE',
+        ERROR_CODES.SUPABASE,
+        'Failed to update team',
+        {
+          teamId,
+          error,
+        }
+      )
+      return returnServerError('Unable to change the team profile picture.')
     }
 
     // Clean up old profile pictures asynchronously in the background
@@ -302,7 +312,15 @@ export const uploadTeamProfilePictureAction = authActionClient
           await deleteFile(filePath)
         }
       } catch (cleanupError) {
-        logWarning('Error during profile picture cleanup:', cleanupError)
+        l.warn(
+          'UPLOAD_TEAM_PROFILE_PICTURE_CLEANUP',
+          ERROR_CODES.SUPABASE,
+          'Error during team profile picture cleanup',
+          {
+            error: cleanupError,
+            teamId,
+          }
+        )
       }
     })()
 

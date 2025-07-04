@@ -9,7 +9,6 @@ import {
 import { VCPUChart } from './vcpu-chart'
 import { ChartPlaceholder } from '@/ui/chart-placeholder'
 import { getUsageThroughReactCache } from '@/server/usage/get-usage'
-import { logError } from '@/lib/clients/logger'
 
 async function VCPUCardContentResolver({ teamId }: { teamId: string }) {
   const result = await getUsageThroughReactCache({ teamId })

@@ -2,7 +2,7 @@ import { createSafeActionClient } from 'next-safe-action'
 import { checkAuthenticated, checkUserTeamAuthorization } from '../utils/server'
 import { z } from 'zod'
 import { UnknownError } from '@/types/errors'
-import { logDebug, logError, logSuccess } from './logger'
+import { l } from '@/lib/clients/logger'
 import { ActionError } from '../utils/action'
 import { VERBOSE } from '../../configs/flags'
 
@@ -40,7 +40,9 @@ export const actionClient = createSafeActionClient({
       return e.message
     }
 
-    logError('Unexpected server error:', e.message)
+    l.error('ACTION_CLIENT', 'Unexpected server error:', {
+      error: e,
+    })
 
     return UnknownError().message
   },
@@ -89,22 +91,34 @@ export const actionClient = createSafeActionClient({
     result.validationErrors ||
     result.success === false
   ) {
-    logError(`${actionOrFunction} '${actionOrFunctionName}' failed:`, {
-      result: sanitizedRest,
-      input: sanitizedInput,
-    })
-  } else if (VERBOSE) {
-    logSuccess(`${actionOrFunction} '${actionOrFunctionName}' succeeded:`, {
-      result: sanitizedRest,
-      input: sanitizedInput,
-    })
+    l.error(
+      'ACTION_CLIENT',
+      `${actionOrFunction} '${actionOrFunctionName}' failed:`,
+      {
+        result: sanitizedRest,
+        input: sanitizedInput,
+      }
+    )
+  } else {
+    l.debug(
+      'ACTION_CLIENT',
+      `${actionOrFunction} '${actionOrFunctionName}' succeeded:`,
+      {
+        result: sanitizedRest,
+        input: sanitizedInput,
+      }
+    )
   }
 
-  if (VERBOSE && startTime) {
+  if (startTime) {
     const endTime = performance.now()
-    logDebug(
-      `${actionOrFunction} '${actionOrFunctionName}' execution took ${endTime - startTime} ms`
-    )
+
+    l.debug({
+      from: 'ACTION_CLIENT',
+      msg: `${actionOrFunction} '${actionOrFunctionName}' took ${endTime - startTime}ms`,
+      result: sanitizedRest,
+      input: sanitizedInput,
+    })
   }
 
   return result

@@ -1,7 +1,7 @@
 import 'server-cli-only'
 
 import { supabaseAdmin } from '@/lib/clients/supabase/admin'
-import { logError } from '@/lib/clients/logger'
+import { l } from '@/lib/clients/logger'
 import { ERROR_CODES } from '@/configs/logs'
 
 export async function getDefaultTeamRelation(userId: string) {
@@ -12,11 +12,16 @@ export async function getDefaultTeamRelation(userId: string) {
     .eq('is_default', true)
 
   if (error || data.length === 0) {
-    logError(ERROR_CODES.SUPABASE, 'Failed to get default team', {
-      userId,
-      error: error?.message,
-      data: data,
-    })
+    l.error(
+      'GET_DEFAULT_TEAM_RELATION',
+      ERROR_CODES.SUPABASE,
+      'Failed to get default team',
+      {
+        userId,
+        error,
+        data,
+      }
+    )
     throw new Error('No default team found')
   }
 
@@ -41,6 +46,16 @@ export async function getDefaultTeam(userId: string) {
     .single()
 
   if (error || !data) {
+    l.error(
+      'GET_DEFAULT_TEAM',
+      ERROR_CODES.SUPABASE,
+      'Failed to get default team',
+      {
+        userId,
+        error,
+        data,
+      }
+    )
     throw new Error('No default team found')
   }
 

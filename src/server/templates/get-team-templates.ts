@@ -6,7 +6,7 @@ import {
   MOCK_DEFAULT_TEMPLATES_DATA,
   MOCK_TEMPLATES_DATA,
 } from '@/configs/mock-data'
-import { logError } from '@/lib/clients/logger'
+import { l } from '@/lib/clients/logger'
 import { ERROR_CODES } from '@/configs/logs'
 import { supabaseAdmin } from '@/lib/clients/supabase/admin'
 import { actionClient, authActionClient } from '@/lib/clients/action'
@@ -45,7 +45,15 @@ export const getTeamTemplates = authActionClient
 
     if (res.error) {
       const status = res.response.status
-      logError(ERROR_CODES.INFRA, '/templates', status, res.error, res.data)
+      l.error(
+        'GET_TEAM_TEMPLATES',
+        ERROR_CODES.INFRA,
+        'Failed to get team templates',
+        {
+          error: res.error,
+          response: res.response,
+        }
+      )
 
       return handleDefaultInfraError(status)
     }
@@ -114,10 +122,14 @@ export const getDefaultTemplates = actionClient
         .single()
 
       if (buildError) {
-        logError(
+        l.error(
+          'GET_DEFAULT_TEMPLATES',
           ERROR_CODES.INFRA,
           `Failed to fetch build for env ${env.id}`,
-          buildError
+          {
+            error: buildError,
+            envId: env.id,
+          }
         )
         continue
       }
@@ -128,10 +140,14 @@ export const getDefaultTemplates = actionClient
         .eq('env_id', env.id)
 
       if (aliasesError) {
-        logError(
+        l.error(
+          'GET_DEFAULT_TEMPLATES',
           ERROR_CODES.INFRA,
           `Failed to fetch aliases for env ${env.id}`,
-          aliasesError
+          {
+            error: aliasesError,
+            envId: env.id,
+          }
         )
         continue
       }

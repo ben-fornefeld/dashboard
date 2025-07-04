@@ -6,7 +6,7 @@ import { authActionClient } from '@/lib/clients/action'
 import { handleDefaultInfraError, returnServerError } from '@/lib/utils/action'
 import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
 import { infra } from '@/lib/clients/api'
-import { logError } from '@/lib/clients/logger'
+import { l } from '@/lib/clients/logger'
 import { ERROR_CODES } from '@/configs/logs'
 
 const DeleteTemplateParamsSchema = z.object({
@@ -32,12 +32,15 @@ export const deleteTemplateAction = authActionClient
 
     if (res.error) {
       const status = res.response.status
-      logError(
+      l.error(
+        'DELETE_TEMPLATE',
         ERROR_CODES.INFRA,
-        '/templates/{templateID}',
-        status,
-        res.error,
-        res.data
+        'Failed to delete template',
+        {
+          templateId,
+          error: res.error,
+          response: res.response,
+        }
       )
 
       if (status === 404) {
@@ -93,12 +96,15 @@ export const updateTemplateAction = authActionClient
 
     if (res.error) {
       const status = res.response.status
-      logError(
+      l.error(
+        'UPDATE_TEMPLATE',
         ERROR_CODES.INFRA,
-        '/templates/{templateID}',
-        status,
-        res.error,
-        res.data
+        'Failed to update template',
+        {
+          templateId,
+          error: res.error,
+          response: res.response,
+        }
       )
 
       if (status === 404) {

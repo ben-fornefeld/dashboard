@@ -5,7 +5,7 @@ import { revalidatePath } from 'next/cache'
 import { authActionClient } from '@/lib/clients/action'
 import { returnServerError } from '@/lib/utils/action'
 import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
-import { logError } from '@/lib/clients/logger'
+import { l } from '@/lib/clients/logger'
 import { ERROR_CODES } from '@/configs/logs'
 import { infra } from '@/lib/clients/api'
 
@@ -39,7 +39,9 @@ export const createApiKeyAction = authActionClient
     })
 
     if (res.error) {
-      logError(ERROR_CODES.INFRA, '/api-keys', res.error)
+      l.error('CREATE_API_KEY', ERROR_CODES.INFRA, 'Failed to create API Key', {
+        error: res.error,
+      })
 
       return returnServerError('Failed to create API Key')
     }
@@ -79,7 +81,9 @@ export const deleteApiKeyAction = authActionClient
     })
 
     if (res.error) {
-      logError(ERROR_CODES.INFRA, '/api-keys/{apiKeyID}', res.error)
+      l.error('DELETE_API_KEY', ERROR_CODES.INFRA, 'Failed to delete API Key', {
+        error: res.error,
+      })
 
       return returnServerError('Failed to delete API Key')
     }

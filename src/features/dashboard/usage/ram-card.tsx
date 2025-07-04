@@ -9,7 +9,6 @@ import {
 import { RAMChart } from './ram-chart'
 import { ChartPlaceholder } from '@/ui/chart-placeholder'
 import { getUsageThroughReactCache } from '@/server/usage/get-usage'
-import { logError } from '@/lib/clients/logger'
 
 async function RAMCardContentResolver({ teamId }: { teamId: string }) {
   const result = await getUsageThroughReactCache({ teamId })

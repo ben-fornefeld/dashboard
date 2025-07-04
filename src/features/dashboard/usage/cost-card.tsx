@@ -9,7 +9,6 @@ import {
 import { CostChart } from './cost-chart'
 import { ChartPlaceholder } from '@/ui/chart-placeholder'
 import { getUsageThroughReactCache } from '@/server/usage/get-usage'
-import { logError } from '@/lib/clients/logger'
 
 async function CostCardContentResolver({ teamId }: { teamId: string }) {
   const result = await getUsageThroughReactCache({ teamId })

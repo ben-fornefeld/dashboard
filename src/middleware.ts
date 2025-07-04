@@ -9,10 +9,10 @@ import {
   resolveTeamForDashboard,
 } from './server/middleware'
 import { PROTECTED_URLS } from './configs/urls'
-import { logError } from './lib/clients/logger'
 import { ERROR_CODES } from './configs/logs'
 import { getRewriteForPath } from './lib/utils/rewrites'
 import { ALLOW_SEO_INDEXING } from './configs/flags'
+import { l } from './lib/clients/logger'
 
 export async function middleware(request: NextRequest) {
   try {
@@ -93,7 +93,10 @@ export async function middleware(request: NextRequest) {
     // Process team resolution result
     return handleTeamResolution(request, response, teamResult)
   } catch (error) {
-    logError(ERROR_CODES.MIDDLEWARE, error)
+    l.error(ERROR_CODES.MIDDLEWARE, {
+      error,
+    })
+
     // Return a basic response to avoid infinite loops
     return NextResponse.next({
       request,
@@ -102,6 +105,7 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
+  runtime: 'nodejs',
   matcher: [
     /*
      * Match all request paths except:

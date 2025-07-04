@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { cookies } from 'next/headers'
 import { unstable_noStore } from 'next/cache'
 import { COOKIE_KEYS } from '@/configs/keys'
-import { logError, logger } from '../clients/logger'
+import { l } from '@/lib/clients/logger'
 import { kv } from '@/lib/clients/kv'
 import { KV_KEYS } from '@/configs/keys'
 import { ERROR_CODES, INFO_CODES } from '@/configs/logs'
@@ -63,13 +63,10 @@ export async function generateE2BUserAccessToken(supabaseAccessToken: string) {
   })
 
   if (res.error) {
-    logError(
-      ERROR_CODES.INFRA,
-      '/access-tokens',
-      res.response.status,
-      res.error,
-      res.data
-    )
+    l.error(ERROR_CODES.INFRA, '/access-tokens', {
+      response: res.response,
+      error: res.error,
+    })
 
     return returnServerError(`Failed to generate e2b user access token`)
   }
@@ -164,14 +161,11 @@ export async function resolveTeamId(identifier: string): Promise<string> {
     .single()
 
   if (error || !team) {
-    logger.error(
-      {
-        code: ERROR_CODES.SELECTED_TEAM_RESOLUTION,
-        identifier,
-        error,
-      },
-      `Failed to resolve team ID from slug: ${identifier}`
-    )
+    l.error('SELECTED_TEAM_RESOLUTION', ERROR_CODES.SELECTED_TEAM_RESOLUTION, {
+      identifier,
+      error,
+      message: `Failed to resolve team ID from slug: ${identifier}`,
+    })
     throw new E2BError('INVALID_PARAMETERS', 'Invalid team identifier')
   }
   // Cache the result
@@ -204,7 +198,8 @@ export async function resolveTeamIdInServerComponent(identifier: string) {
     teamId = await resolveTeamId(identifier)
     cookiesStore.set(COOKIE_KEYS.SELECTED_TEAM_ID, teamId)
 
-    logger.info(
+    l.info(
+      'SELECTED_TEAM_RESOLUTION',
       INFO_CODES.EXPENSIVE_OPERATION,
       'Resolving teamId resolution in server component from data sources',
       {

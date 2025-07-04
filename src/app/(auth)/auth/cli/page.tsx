@@ -2,7 +2,7 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import { CloudIcon, LaptopIcon, Link2Icon } from 'lucide-react'
 import { createClient } from '@/lib/clients/supabase/server'
-import { logError } from '@/lib/clients/logger'
+import { l } from '@/lib/clients/logger'
 import { ERROR_CODES } from '@/configs/logs'
 import { AUTH_URLS, PROTECTED_URLS } from '@/configs/urls'
 import { bailOutFromPPR, generateE2BUserAccessToken } from '@/lib/utils/server'
@@ -104,7 +104,7 @@ export default async function CLIAuthPage({
 
   // Validate redirect URL
   if (!next?.startsWith('http://localhost')) {
-    logError(ERROR_CODES.CLI_AUTH, 'Invalid redirect URL')
+    l.error(ERROR_CODES.CLI_AUTH, { message: 'Invalid redirect URL' })
     redirect(PROTECTED_URLS.DASHBOARD)
   }
 
@@ -138,7 +138,7 @@ export default async function CLIAuthPage({
         throw err
       }
 
-      logError(ERROR_CODES.CLI_AUTH, err)
+      l.error(ERROR_CODES.CLI_AUTH, { error: err })
 
       return encodedRedirect('error', '/auth/cli', (err as Error).message, {
         next,

@@ -19,7 +19,7 @@ import { useTemplateTableStore } from '../templates/stores/table-store'
 import { useServerContext } from '@/lib/hooks/use-server-context'
 import { JsonPopover } from '@/ui/json-popover'
 import posthog from 'posthog-js'
-import { logError } from '@/lib/clients/logger'
+import { l } from '@/lib/clients/logger/client'
 
 export type SandboxWithMetrics = Sandbox & { metrics: SandboxMetrics[] }
 
@@ -53,9 +53,8 @@ export const fuzzyFilter: FilterFn<Sandbox> = (
       return stringifiedMetadata.includes(value)
     }
   } catch (error) {
-    logError('Error in fuzzyFilter', {
+    l.error('SANDBOXES_TABLE', 'Error in fuzzyFilter', {
       error,
-      row,
       columnId,
       value,
     })

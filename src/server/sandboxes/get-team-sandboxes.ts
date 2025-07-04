@@ -2,7 +2,7 @@ import 'server-only'
 
 import { z } from 'zod'
 import { MOCK_METRICS_DATA, MOCK_SANDBOXES_DATA } from '@/configs/mock-data'
-import { logError } from '@/lib/clients/logger'
+import { l } from '@/lib/clients/logger'
 import { ERROR_CODES } from '@/configs/logs'
 import { authActionClient } from '@/lib/clients/action'
 import { handleDefaultInfraError, returnServerError } from '@/lib/utils/action'
@@ -41,7 +41,15 @@ export const getTeamSandboxes = authActionClient
     if (res.error) {
       const status = res.response.status
 
-      logError(ERROR_CODES.INFRA, '/sandboxes', status, res.error, res.data)
+      l.error(
+        'GET_TEAM_SANDBOXES',
+        ERROR_CODES.INFRA,
+        'Failed to get team sandboxes',
+        {
+          error: res.error,
+          response: res.response,
+        }
+      )
 
       return handleDefaultInfraError(status)
     }

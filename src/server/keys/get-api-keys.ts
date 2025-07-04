@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { authActionClient } from '@/lib/clients/action'
 import { handleDefaultInfraError } from '@/lib/utils/action'
 import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
-import { logError } from '@/lib/clients/logger'
+import { l } from '@/lib/clients/logger'
 import { ERROR_CODES } from '@/configs/logs'
 import { infra } from '@/lib/clients/api'
 
@@ -29,7 +29,15 @@ export const getTeamApiKeys = authActionClient
 
     if (res.error) {
       const status = res.response.status
-      logError(ERROR_CODES.INFRA, '/api-keys', status, res.error, res.data)
+      l.error(
+        'GET_TEAM_API_KEYS',
+        ERROR_CODES.INFRA,
+        'Failed to get team API keys',
+        {
+          error: res.error,
+          response: res.response,
+        }
+      )
 
       return handleDefaultInfraError(status)
     }

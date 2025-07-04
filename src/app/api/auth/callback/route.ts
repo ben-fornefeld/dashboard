@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/clients/supabase/server'
 import { redirect } from 'next/navigation'
 import { AUTH_URLS, PROTECTED_URLS } from '@/configs/urls'
-import { logInfo } from '@/lib/clients/logger'
+import { l } from '@/lib/clients/logger'
 import { ERROR_CODES } from '@/configs/logs'
 import { encodedRedirect } from '@/lib/utils/auth'
 
@@ -16,10 +16,11 @@ export async function GET(request: Request) {
   const returnTo = requestUrl.searchParams.get('returnTo')?.toString()
   const redirectTo = requestUrl.searchParams.get('redirect_to')?.toString()
 
-  logInfo('Auth callback:', {
+  l.info('AUTH_CALLBACK', 'Auth callback:', {
     code: !!code,
     origin,
     returnTo,
+    redirectTo,
   })
 
   if (code) {
@@ -27,21 +28,23 @@ export async function GET(request: Request) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code)
 
     if (error) {
-      console.error(
-        ERROR_CODES.SUPABASE,
-        'Error exchanging code for session:',
-        error
-      )
+      l.error('AUTH_CALLBACK', ERROR_CODES.SUPABASE, {
+        error,
+      })
       throw encodedRedirect('error', AUTH_URLS.SIGN_IN, error.message)
     } else {
-      logInfo('OTP was successfully exchanged for user:', data.user.id)
+      l.info('AUTH_CALLBACK', 'OTP was successfully exchanged for user', {
+        userId: data.user.id,
+      })
     }
   }
 
   if (redirectTo) {
     const returnToUrl = new URL(redirectTo, origin)
     if (returnToUrl.origin === origin) {
-      logInfo('Redirecting to:', redirectTo)
+      l.info('AUTH_CALLBACK', 'Redirecting to:', {
+        redirectTo,
+      })
       return redirect(redirectTo)
     }
   }
@@ -51,12 +54,14 @@ export async function GET(request: Request) {
     // Ensure returnTo is a relative URL to prevent open redirect vulnerabilities
     const returnToUrl = new URL(returnTo, origin)
     if (returnToUrl.origin === origin) {
-      logInfo('Returning to:', returnTo)
+      l.info('AUTH_CALLBACK', 'Returning to:', {
+        returnTo,
+      })
       return redirect(returnTo)
     }
   }
 
   // Default redirect to dashboard
-  logInfo('Redirecting to dashboard')
+  l.info('AUTH_CALLBACK', 'Redirecting to dashboard')
   return redirect(PROTECTED_URLS.DASHBOARD)
 }

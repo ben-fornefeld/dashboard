@@ -5,7 +5,7 @@ import {
 } from '@/configs/rewrites'
 import { RewriteConfig } from '@/types/rewrites.types'
 import * as cheerio from 'cheerio'
-import { logError, logWarning } from '@/lib/clients/logger'
+import { l } from '@/lib/clients/logger'
 import { ERROR_CODES } from '@/configs/logs'
 
 function getRewriteForPath(
@@ -78,7 +78,8 @@ function rewriteSeoTags($: cheerio.CheerioAPI, options: SeoTagOptions): void {
     return
   }
 
-  logWarning(
+  l.warn(
+    'SEO_TAG_REWRITER',
     'Cheerio SEO Rewriter: <head> tag not found. Cannot insert SEO tags.'
   )
 }
@@ -108,11 +109,13 @@ function rewriteAbsoluteHrefsInDoc(
       const relativePath = url.pathname + url.search + url.hash
       $element.attr('href', relativePath)
     } catch (e) {
-      // Ignore invalid URLs during rewrite
-      logError(
+      l.error(
+        'SEO_TAG_REWRITER',
         ERROR_CODES.URL_REWRITE,
         `Cheerio Href Rewriter: Failed to parse or set href="${href}"`,
-        e
+        {
+          error: e,
+        }
       )
     }
   })
