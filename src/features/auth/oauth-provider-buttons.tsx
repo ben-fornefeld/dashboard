@@ -3,13 +3,14 @@
 import { signInWithOAuthAction } from '@/server/auth/auth-actions'
 import { Button } from '@/ui/primitives/button'
 import { useSearchParams } from 'next/navigation'
+import { PROTECTED_URLS } from '@/configs/urls'
 
 export function OAuthProviders() {
   const searchParams = useSearchParams()
-  const returnTo = searchParams.get('returnTo')
+  const returnTo = searchParams.get('returnTo') || PROTECTED_URLS.DASHBOARD
 
   const handleOAuthSignIn = (provider: 'google' | 'github') => {
-    signInWithOAuthAction({ provider, returnTo: returnTo || undefined })
+    signInWithOAuthAction({ provider, returnTo })
   }
 
   return (
