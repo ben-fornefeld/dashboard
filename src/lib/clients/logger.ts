@@ -43,12 +43,6 @@ const DEFAULT_TERMINAL_COLORS: ColorConfig = {
 
 const ANSI_RESET = '\x1b[0m'
 
-function formatContext(context: unknown): unknown {
-  if (context === undefined || context === null) return ''
-
-  return context
-}
-
 const supportsAnsi =
   !isBrowser &&
   typeof process !== 'undefined' &&
@@ -174,7 +168,7 @@ export class Logger {
 
     if (message) parts.push(message)
     if (context !== undefined) {
-      parts.push('\n', formatContext(context))
+      parts.push('\n', context)
     }
 
     fn(...parts)
