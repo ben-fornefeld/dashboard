@@ -49,6 +49,17 @@ function formatContext(context: unknown): unknown {
   return context
 }
 
+const supportsAnsi =
+  !isBrowser &&
+  typeof process !== 'undefined' &&
+  !!process.stdout &&
+  !!process.stdout.isTTY &&
+  !(
+    'NO_COLOR' in process.env ||
+    'NODE_DISABLE_COLORS' in process.env ||
+    process.env.FORCE_COLOR === '0'
+  )
+
 export class Logger {
   /*
    *  Overloaded method signatures ‑ available on all levels
@@ -119,13 +130,15 @@ export class Logger {
     if (isBrowser) {
       const style = LEVEL_STYLES[levelLabel]?.browser ?? ''
       parts = [`%c ${levelLabel} `, style, key]
-    } else {
+    } else if (supportsAnsi) {
       const colors =
         LEVEL_STYLES[levelLabel]?.terminal ?? DEFAULT_TERMINAL_COLORS
       parts = [
         `${colors.bg}${colors.fg} ${levelLabel} ${ANSI_RESET}`,
-        `${colors.fg}${key}${ANSI_RESET}`,
+        `${key}${ANSI_RESET}`,
       ]
+    } else {
+      parts = [`${levelLabel} | `, key]
     }
 
     if (message) parts.push(message)
