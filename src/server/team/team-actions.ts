@@ -1,23 +1,21 @@
 'use server'
 
-import { supabaseAdmin } from '@/lib/clients/supabase/admin'
-import { Database } from '@/types/database.types'
-import { checkUserTeamAuthorization } from '@/lib/utils/server'
-import { z } from 'zod'
-import { kv } from '@vercel/kv'
-import { KV_KEYS } from '@/configs/keys'
-import { revalidatePath } from 'next/cache'
-import { uploadFile, deleteFile, getFiles } from '@/lib/clients/storage'
-import { authActionClient } from '@/lib/clients/action'
-import { returnServerError } from '@/lib/utils/action'
-import { zfd } from 'zod-form-data'
-import { l } from '@/lib/clients/logger'
-import { returnValidationErrors } from 'next-safe-action'
-import { getTeam } from './get-team'
 import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
+import { KV_KEYS } from '@/configs/keys'
+import { authActionClient } from '@/lib/clients/action'
+import { l } from '@/lib/clients/logger'
+import { deleteFile, getFiles, uploadFile } from '@/lib/clients/storage'
+import { supabaseAdmin } from '@/lib/clients/supabase/admin'
+import { returnServerError } from '@/lib/utils/action'
+import { checkUserTeamAuthorization } from '@/lib/utils/server'
 import { CreateTeamSchema, UpdateTeamNameSchema } from '@/server/team/types'
 import { CreateTeamsResponse } from '@/types/billing'
-import { ERROR_CODES } from '@/configs/logs'
+import { kv } from '@vercel/kv'
+import { returnValidationErrors } from 'next-safe-action'
+import { revalidatePath } from 'next/cache'
+import { z } from 'zod'
+import { zfd } from 'zod-form-data'
+import { getTeam } from './get-team'
 
 export const updateTeamNameAction = authActionClient
   .schema(UpdateTeamNameSchema)
@@ -280,8 +278,7 @@ export const uploadTeamProfilePictureAction = authActionClient
     if (error) {
       l.error(
         'UPLOAD_TEAM_PROFILE_PICTURE',
-        ERROR_CODES.SUPABASE,
-        'Failed to update team',
+        'SUPABASE - Failed to update team',
         {
           teamId,
           error,
@@ -314,8 +311,7 @@ export const uploadTeamProfilePictureAction = authActionClient
       } catch (cleanupError) {
         l.warn(
           'UPLOAD_TEAM_PROFILE_PICTURE_CLEANUP',
-          ERROR_CODES.SUPABASE,
-          'Error during team profile picture cleanup',
+          'SUPABASE - Error during team profile picture cleanup',
           {
             error: cleanupError,
             teamId,

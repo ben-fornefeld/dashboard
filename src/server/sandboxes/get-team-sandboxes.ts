@@ -1,13 +1,12 @@
 import 'server-only'
 
-import { z } from 'zod'
-import { MOCK_METRICS_DATA, MOCK_SANDBOXES_DATA } from '@/configs/mock-data'
-import { l } from '@/lib/clients/logger'
-import { ERROR_CODES } from '@/configs/logs'
-import { authActionClient } from '@/lib/clients/action'
-import { handleDefaultInfraError, returnServerError } from '@/lib/utils/action'
 import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
+import { MOCK_METRICS_DATA, MOCK_SANDBOXES_DATA } from '@/configs/mock-data'
+import { authActionClient } from '@/lib/clients/action'
 import { infra } from '@/lib/clients/api'
+import { l } from '@/lib/clients/logger'
+import { handleDefaultInfraError } from '@/lib/utils/action'
+import { z } from 'zod'
 
 const GetTeamSandboxesSchema = z.object({
   teamId: z.string().uuid(),
@@ -41,15 +40,12 @@ export const getTeamSandboxes = authActionClient
     if (res.error) {
       const status = res.response.status
 
-      l.error(
-        'GET_TEAM_SANDBOXES',
-        ERROR_CODES.INFRA,
-        'Failed to get team sandboxes',
-        {
-          error: res.error,
-          response: res.response,
-        }
-      )
+      l.error('GET_TEAM_SANDBOXES', 'INFRA - Failed to get team sandboxes', {
+        teamId,
+        responseStatus: res.response.status,
+        responseBody: res.response.body,
+        error: res.error,
+      })
 
       return handleDefaultInfraError(status)
     }

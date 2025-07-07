@@ -1,5 +1,4 @@
 import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
-import { ERROR_CODES } from '@/configs/logs'
 import { authActionClient } from '@/lib/clients/action'
 import { infra } from '@/lib/clients/api'
 import { l } from '@/lib/clients/logger'
@@ -32,15 +31,13 @@ export const getSandboxDetails = authActionClient
     if (res.error) {
       const status = res.response.status
 
-      l.error(
-        'GET_SANDBOX_DETAILS',
-        ERROR_CODES.INFRA,
-        'Failed to get sandbox details',
-        {
-          error: res.error,
-          response: res.response,
-        }
-      )
+      l.error('GET_SANDBOX_DETAILS', 'INFRA - Failed to get sandbox details', {
+        teamId,
+        sandboxId,
+        responseStatus: res.response.status,
+        responseBody: res.response.body,
+        error: res.error,
+      })
 
       if (status === 404) {
         return returnServerError(

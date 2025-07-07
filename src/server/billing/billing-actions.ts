@@ -2,6 +2,7 @@
 
 import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
 import { authActionClient } from '@/lib/clients/action'
+import { l } from '@/lib/clients/logger'
 import { returnServerError } from '@/lib/utils/action'
 import { CustomerPortalResponse } from '@/types/billing'
 import { revalidatePath } from 'next/cache'
@@ -35,7 +36,20 @@ export const redirectToCheckoutAction = authActionClient
 
     if (!res.ok) {
       const text = await res.text()
-      throw new Error(text ?? 'Failed to redirect to checkout')
+
+      l.error(
+        'REDIRECT_TO_CHECKOUT',
+        'BILLING - Failed to redirect to checkout',
+        {
+          teamId,
+          responseStatus: res.status,
+          responseBody: text,
+        }
+      )
+
+      return returnServerError(
+        'Failed to redirect to checkout. Please try again.'
+      )
     }
 
     const data = (await res.json()) as { url: string; error?: string }
@@ -82,7 +96,14 @@ export const setLimitAction = authActionClient
 
     if (!res.ok) {
       const text = await res.text()
-      return returnServerError(text ?? 'Failed to set limit')
+
+      l.error('SET_LIMIT', 'BILLING - Failed to set limit', {
+        teamId,
+        responseStatus: res.status,
+        responseBody: text,
+      })
+
+      return returnServerError('Failed to set limit. Please try again.')
     }
 
     revalidatePath(`/dashboard/[teamIdOrSlug]/budget`, 'page')
@@ -113,7 +134,14 @@ export const clearLimitAction = authActionClient
 
     if (!res.ok) {
       const text = await res.text()
-      return returnServerError(text ?? 'Failed to clear limit')
+
+      l.error('CLEAR_LIMIT', 'BILLING - Failed to clear limit', {
+        teamId,
+        responseStatus: res.status,
+        responseBody: text,
+      })
+
+      return returnServerError('Failed to clear limit. Please try again.')
     }
 
     revalidatePath(`/dashboard/[teamIdOrSlug]/budget`, 'page')
@@ -145,7 +173,20 @@ export const redirectToCustomerPortal = authActionClient
 
     if (!res.ok) {
       const text = await res.text()
-      throw new Error(text ?? 'Failed to redirect to customer portal')
+
+      l.error(
+        'REDIRECT_TO_CUSTOMER_PORTAL',
+        'BILLING - Failed to redirect to customer portal',
+        {
+          teamId,
+          responseStatus: res.status,
+          responseBody: text,
+        }
+      )
+
+      return returnServerError(
+        'Failed to redirect to customer portal. Please try again.'
+      )
     }
 
     const data = (await res.json()) as CustomerPortalResponse

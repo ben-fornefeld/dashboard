@@ -4,12 +4,9 @@ import {
   getAuthRedirect,
   getUserSession,
   handleTeamResolution,
-  isAuthRoute,
   isDashboardRoute,
   resolveTeamForDashboard,
 } from './server/middleware'
-import { PROTECTED_URLS } from './configs/urls'
-import { ERROR_CODES } from './configs/logs'
 import { getRewriteForPath } from './lib/utils/rewrites'
 import { ALLOW_SEO_INDEXING } from './configs/flags'
 import { l } from './lib/clients/logger'
@@ -93,7 +90,7 @@ export async function middleware(request: NextRequest) {
     // Process team resolution result
     return handleTeamResolution(request, response, teamResult)
   } catch (error) {
-    l.error(ERROR_CODES.MIDDLEWARE, {
+    l.error('MIDDLEWARE', 'Unexpected error', {
       error,
     })
 

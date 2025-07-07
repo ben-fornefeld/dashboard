@@ -19,7 +19,7 @@ import { useTemplateTableStore } from '../templates/stores/table-store'
 import { useServerContext } from '@/lib/hooks/use-server-context'
 import { JsonPopover } from '@/ui/json-popover'
 import posthog from 'posthog-js'
-import { l } from '@/lib/clients/logger/client'
+import { l } from '@/lib/clients/logger'
 
 export type SandboxWithMetrics = Sandbox & { metrics: SandboxMetrics[] }
 

@@ -113,12 +113,10 @@ export const actionClient = createSafeActionClient({
   if (startTime) {
     const endTime = performance.now()
 
-    l.debug({
-      from: 'ACTION_CLIENT',
-      msg: `${actionOrFunction} '${actionOrFunctionName}' took ${endTime - startTime}ms`,
-      result: sanitizedRest,
-      input: sanitizedInput,
-    })
+    l.debug(
+      'ACTION_CLIENT',
+      `${actionOrFunction} '${actionOrFunctionName}' took ${endTime - startTime}ms`
+    )
   }
 
   return result

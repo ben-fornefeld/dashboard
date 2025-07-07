@@ -3,10 +3,9 @@ import {
   RewriteConfigType,
   ROUTE_REWRITE_CONFIG,
 } from '@/configs/rewrites'
+import { l } from '@/lib/clients/logger'
 import { RewriteConfig } from '@/types/rewrites.types'
 import * as cheerio from 'cheerio'
-import { l } from '@/lib/clients/logger'
-import { ERROR_CODES } from '@/configs/logs'
 
 function getRewriteForPath(
   path: string,
@@ -109,9 +108,8 @@ function rewriteAbsoluteHrefsInDoc(
       const relativePath = url.pathname + url.search + url.hash
       $element.attr('href', relativePath)
     } catch (e) {
-      l.error(
+      l.warn(
         'SEO_TAG_REWRITER',
-        ERROR_CODES.URL_REWRITE,
         `Cheerio Href Rewriter: Failed to parse or set href="${href}"`,
         {
           error: e,

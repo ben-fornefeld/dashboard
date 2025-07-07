@@ -1,18 +1,15 @@
 import 'server-cli-only'
 
+import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
+import { COOKIE_KEYS, KV_KEYS } from '@/configs/keys'
+import { kv } from '@/lib/clients/kv'
+import { l } from '@/lib/clients/logger'
 import { supabaseAdmin } from '@/lib/clients/supabase/admin'
 import { createClient } from '@/lib/clients/supabase/server'
 import { E2BError, UnauthenticatedError } from '@/types/errors'
-import { z } from 'zod'
-import { cookies } from 'next/headers'
 import { unstable_noStore } from 'next/cache'
-import { COOKIE_KEYS } from '@/configs/keys'
-import { l } from '@/lib/clients/logger'
-import { kv } from '@/lib/clients/kv'
-import { KV_KEYS } from '@/configs/keys'
-import { ERROR_CODES, INFO_CODES } from '@/configs/logs'
-import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
-import { CreatedAccessToken } from '@/types/api'
+import { cookies } from 'next/headers'
+import { z } from 'zod'
 import { infra } from '../clients/api'
 import { returnServerError } from './action'
 
@@ -63,10 +60,15 @@ export async function generateE2BUserAccessToken(supabaseAccessToken: string) {
   })
 
   if (res.error) {
-    l.error(ERROR_CODES.INFRA, '/access-tokens', {
-      response: res.response,
-      error: res.error,
-    })
+    l.error(
+      'GENERATE_E2B_USER_ACCESS_TOKEN',
+      'INFRA - Failed to generate e2b user access token',
+      {
+        responseStatus: res.response.status,
+        responseBody: res.response.body,
+        error: res.error,
+      }
+    )
 
     return returnServerError(`Failed to generate e2b user access token`)
   }
@@ -99,6 +101,16 @@ export async function checkUserTeamAuthorization(
       .eq('team_id', teamId)
 
   if (userTeamsRelationError) {
+    l.error(
+      'CHECK_USER_TEAM_AUTHORIZATION',
+      'SUPABASE - Failed to check user team authorization',
+      {
+        error: userTeamsRelationError,
+        userId,
+        teamId,
+      }
+    )
+
     throw new Error(
       `Failed to fetch users_teams relation (user: ${userId}, team: ${teamId})`
     )
@@ -161,11 +173,15 @@ export async function resolveTeamId(identifier: string): Promise<string> {
     .single()
 
   if (error || !team) {
-    l.error('SELECTED_TEAM_RESOLUTION', ERROR_CODES.SELECTED_TEAM_RESOLUTION, {
-      identifier,
-      error,
-      message: `Failed to resolve team ID from slug: ${identifier}`,
-    })
+    l.error(
+      'SELECTED_TEAM_RESOLUTION',
+      'SUPABASE - Failed to resolve team ID from slug',
+      {
+        identifier,
+        team,
+        error,
+      }
+    )
     throw new E2BError('INVALID_PARAMETERS', 'Invalid team identifier')
   }
   // Cache the result
@@ -198,10 +214,9 @@ export async function resolveTeamIdInServerComponent(identifier: string) {
     teamId = await resolveTeamId(identifier)
     cookiesStore.set(COOKIE_KEYS.SELECTED_TEAM_ID, teamId)
 
-    l.info(
+    l.warn(
       'SELECTED_TEAM_RESOLUTION',
-      INFO_CODES.EXPENSIVE_OPERATION,
-      'Resolving teamId resolution in server component from data sources',
+      'Resolving teamId in server component from data sources. Should usually be handled by middleware.',
       {
         identifier,
         teamId,

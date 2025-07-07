@@ -7,7 +7,6 @@ import { handleDefaultInfraError, returnServerError } from '@/lib/utils/action'
 import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
 import { infra } from '@/lib/clients/api'
 import { l } from '@/lib/clients/logger'
-import { ERROR_CODES } from '@/configs/logs'
 
 const DeleteTemplateParamsSchema = z.object({
   templateId: z.string(),
@@ -32,16 +31,11 @@ export const deleteTemplateAction = authActionClient
 
     if (res.error) {
       const status = res.response.status
-      l.error(
-        'DELETE_TEMPLATE',
-        ERROR_CODES.INFRA,
-        'Failed to delete template',
-        {
-          templateId,
-          error: res.error,
-          response: res.response,
-        }
-      )
+      l.error('DELETE_TEMPLATE', 'INFRA - Failed to delete template', {
+        templateId,
+        error: res.error,
+        response: res.response,
+      })
 
       if (status === 404) {
         return returnServerError('Template not found')
@@ -96,16 +90,11 @@ export const updateTemplateAction = authActionClient
 
     if (res.error) {
       const status = res.response.status
-      l.error(
-        'UPDATE_TEMPLATE',
-        ERROR_CODES.INFRA,
-        'Failed to update template',
-        {
-          templateId,
-          error: res.error,
-          response: res.response,
-        }
-      )
+      l.error('UPDATE_TEMPLATE', 'INFRA - Failed to update template', {
+        templateId,
+        error: res.error,
+        response: res.response,
+      })
 
       if (status === 404) {
         return returnServerError('Template not found')

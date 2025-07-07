@@ -2,7 +2,6 @@ import {
   getRewriteForPath,
   rewriteContentPagesHtml,
 } from '@/lib/utils/rewrites'
-import { ERROR_CODES } from '@/configs/logs'
 import { NextRequest } from 'next/server'
 import sitemap from '@/app/sitemap'
 import { BASE_URL } from '@/configs/urls'
@@ -87,7 +86,7 @@ export async function GET(request: NextRequest): Promise<Response> {
 
     return res
   } catch (error) {
-    l.error(ERROR_CODES.URL_REWRITE, { error })
+    l.error('URL_REWRITE', 'Unexpected error', { error })
 
     return new Response(
       `Proxy Error: ${error instanceof Error ? error.message : 'Unknown error'}`,

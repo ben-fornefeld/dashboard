@@ -1,7 +1,6 @@
 'use server'
 
 import { authActionClient } from '@/lib/clients/action'
-import { supabaseAdmin } from '@/lib/clients/supabase/admin'
 import { generateE2BUserAccessToken } from '@/lib/utils/server'
 import { z } from 'zod'
 import { headers } from 'next/headers'

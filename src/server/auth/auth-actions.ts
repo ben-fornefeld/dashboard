@@ -1,21 +1,20 @@
 'use server'
 
-import { encodedRedirect } from '@/lib/utils/auth'
-import { createClient } from '@/lib/clients/supabase/server'
-import { headers } from 'next/headers'
-import { redirect } from 'next/navigation'
-import { Provider } from '@supabase/supabase-js'
 import { AUTH_URLS, PROTECTED_URLS } from '@/configs/urls'
 import { actionClient } from '@/lib/clients/action'
+import { l } from '@/lib/clients/logger'
+import { createClient } from '@/lib/clients/supabase/server'
 import { returnServerError } from '@/lib/utils/action'
-import { z } from 'zod'
-import { zfd } from 'zod-form-data'
+import { encodedRedirect } from '@/lib/utils/auth'
 import {
   shouldWarnAboutAlternateEmail,
   validateEmail,
 } from '@/server/auth/validate-email'
-import { ERROR_CODES } from '@/configs/logs'
-import { logInfo } from '@/lib/clients/logger'
+import { Provider } from '@supabase/supabase-js'
+import { headers } from 'next/headers'
+import { redirect } from 'next/navigation'
+import { z } from 'zod'
+import { zfd } from 'zod-form-data'
 
 export const signInWithOAuthAction = actionClient
   .schema(
@@ -32,7 +31,7 @@ export const signInWithOAuthAction = actionClient
 
     const origin = (await headers()).get('origin')
 
-    logInfo('SIGN_IN_WITH_OAUTH_ACTION', {
+    l.debug('SIGN_IN_WITH_OAUTH_ACTION', {
       provider,
       returnTo,
       origin,
@@ -57,7 +56,7 @@ export const signInWithOAuthAction = actionClient
     }
 
     if (data.url) {
-      redirect(data.url)
+      throw redirect(data.url)
     }
 
     throw encodedRedirect(
@@ -176,7 +175,11 @@ export const forgotPasswordAction = actionClient
     const { error } = await supabase.auth.resetPasswordForEmail(email)
 
     if (error) {
-      console.error(ERROR_CODES.SUPABASE, 'Error resetting password:', error)
+      l.error('FORGOT_PASSWORD', 'SUPABASE - Error resetting password', {
+        error,
+        email,
+      })
+
       if (error.message.includes('security purposes')) {
         return returnServerError(
           'Please wait before requesting another password reset'

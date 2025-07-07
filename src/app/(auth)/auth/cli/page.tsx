@@ -3,7 +3,6 @@ import { redirect } from 'next/navigation'
 import { CloudIcon, LaptopIcon, Link2Icon } from 'lucide-react'
 import { createClient } from '@/lib/clients/supabase/server'
 import { l } from '@/lib/clients/logger'
-import { ERROR_CODES } from '@/configs/logs'
 import { AUTH_URLS, PROTECTED_URLS } from '@/configs/urls'
 import { bailOutFromPPR, generateE2BUserAccessToken } from '@/lib/utils/server'
 import { encodedRedirect } from '@/lib/utils/auth'
@@ -104,7 +103,7 @@ export default async function CLIAuthPage({
 
   // Validate redirect URL
   if (!next?.startsWith('http://localhost')) {
-    l.error(ERROR_CODES.CLI_AUTH, { message: 'Invalid redirect URL' })
+    l.error('CLI_AUTH', 'Invalid redirect URL')
     redirect(PROTECTED_URLS.DASHBOARD)
   }
 
@@ -138,7 +137,7 @@ export default async function CLIAuthPage({
         throw err
       }
 
-      l.error(ERROR_CODES.CLI_AUTH, { error: err })
+      l.error('CLI_AUTH', 'Unexpected error', { error: err })
 
       return encodedRedirect('error', '/auth/cli', (err as Error).message, {
         next,

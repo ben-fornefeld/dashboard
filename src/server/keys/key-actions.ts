@@ -6,7 +6,6 @@ import { authActionClient } from '@/lib/clients/action'
 import { returnServerError } from '@/lib/utils/action'
 import { SUPABASE_AUTH_HEADERS } from '@/configs/api'
 import { l } from '@/lib/clients/logger'
-import { ERROR_CODES } from '@/configs/logs'
 import { infra } from '@/lib/clients/api'
 
 // Create API Key
@@ -29,18 +28,24 @@ export const createApiKeyAction = authActionClient
 
     const accessToken = session.access_token
 
+    const requestBody = {
+      name,
+    }
+
     const res = await infra.POST('/api-keys', {
-      body: {
-        name,
-      },
+      body: requestBody,
       headers: {
         ...SUPABASE_AUTH_HEADERS(accessToken, teamId),
       },
     })
 
     if (res.error) {
-      l.error('CREATE_API_KEY', ERROR_CODES.INFRA, 'Failed to create API Key', {
+      l.error('CREATE_API_KEY', 'INFRA - Failed to create API Key', {
         error: res.error,
+        teamId,
+        requestBody,
+        responseStatus: res.response.status,
+        responseBody: res.response.body,
       })
 
       return returnServerError('Failed to create API Key')
@@ -81,8 +86,12 @@ export const deleteApiKeyAction = authActionClient
     })
 
     if (res.error) {
-      l.error('DELETE_API_KEY', ERROR_CODES.INFRA, 'Failed to delete API Key', {
+      l.error('DELETE_API_KEY', 'INFRA - Failed to delete API Key', {
         error: res.error,
+        teamId,
+        apiKeyId,
+        responseStatus: res.response.status,
+        responseBody: res.response.body,
       })
 
       return returnServerError('Failed to delete API Key')

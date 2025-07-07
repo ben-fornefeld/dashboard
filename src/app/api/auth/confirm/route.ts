@@ -1,5 +1,5 @@
 import { AUTH_URLS, PROTECTED_URLS } from '@/configs/urls'
-import { logInfo, logError } from '@/lib/clients/logger'
+import { l } from '@/lib/clients/logger'
 import { createClient } from '@/lib/clients/supabase/server'
 import { encodedRedirect } from '@/lib/utils/auth'
 import { redirect } from 'next/navigation'
@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
   const dashboardSignInUrl = new URL(request.nextUrl.origin + AUTH_URLS.SIGN_IN)
 
   if (!result.success) {
-    logError('AUTH_CONFIRM_INVALID_PARAMS', {
+    l.error('AUTH_CONFIRM_INVALID_PARAMS', {
       errors: result.error.errors,
     })
     return encodedRedirect(
@@ -58,7 +58,7 @@ export async function GET(request: NextRequest) {
     normalizeOrigin(new URL(supabaseRedirectTo).origin) !==
       normalizeOrigin(dashboardUrl.origin)
 
-  logInfo('AUTH_CONFIRM_INIT', {
+  l.debug('AUTH_CONFIRM_INIT', {
     supabase_token_hash: supabaseTokenHash
       ? `${supabaseTokenHash.slice(0, 10)}...`
       : null,
@@ -93,7 +93,7 @@ export async function GET(request: NextRequest) {
     })
 
     if (error) {
-      logError('AUTH_CONFIRM_ERROR', {
+      l.error('AUTH_CONFIRM_ERROR', {
         supabaseTokenHash: `${supabaseTokenHash.slice(0, 10)}...`,
         supabaseType,
         supabaseRedirectTo,
@@ -115,7 +115,7 @@ export async function GET(request: NextRequest) {
       )
     }
 
-    logInfo('AUTH_CONFIRM_SUCCESS', {
+    l.debug('AUTH_CONFIRM_SUCCESS', {
       supabaseTokenHash: `${supabaseTokenHash.slice(0, 10)}...`,
       supabaseType,
       supabaseRedirectTo,
@@ -124,7 +124,7 @@ export async function GET(request: NextRequest) {
 
     return response
   } catch (e) {
-    logError('AUTH_CONFIRM_ERROR', {
+    l.error('AUTH_CONFIRM_ERROR', {
       error: e,
     })
     return encodedRedirect(
