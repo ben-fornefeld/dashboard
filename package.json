@@ -76,7 +76,6 @@
     "@types/serialize-javascript": "^5.0.4",
     "@vercel/analytics": "^1.5.0",
     "@vercel/kv": "^3.0.0",
-    "ansis": "^3.17.0",
     "cheerio": "^1.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
