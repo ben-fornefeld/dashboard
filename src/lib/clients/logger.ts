@@ -3,14 +3,45 @@ import { VERBOSE } from '@/configs/flags'
 const isBrowser =
   typeof window !== 'undefined' && typeof window.document !== 'undefined'
 
-const BROWSER_LEVEL_STYLES: Record<string, string> = {
-  DEBUG:
-    'background: #9e9e9e; color: #000; padding: 1px 3px; border-radius: 2px',
-  INFO: 'background: #00bcd4; color: #000; padding: 1px 3px; border-radius: 2px',
-  WARN: 'background: #ffc107; color: #000; padding: 1px 3px; border-radius: 2px',
-  ERROR:
-    'background: #f44336; color: #fff; padding: 1px 3px; border-radius: 2px',
+type ColorConfig = {
+  fg: string
+  bg: string
 }
+
+type LevelConfig = {
+  browser: string // CSS style string
+  terminal: ColorConfig // ANSI color codes
+}
+
+const LEVEL_STYLES: Record<string, LevelConfig> = {
+  DEBUG: {
+    browser:
+      'background: #9e9e9e; color: #000; padding: 1px 3px; border-radius: 2px',
+    terminal: { fg: '\x1b[30m', bg: '\x1b[100m' }, // Black on gray
+  },
+  INFO: {
+    browser:
+      'background: #00bcd4; color: #000; padding: 1px 3px; border-radius: 2px',
+    terminal: { fg: '\x1b[30m', bg: '\x1b[46m' }, // Black on cyan
+  },
+  WARN: {
+    browser:
+      'background: #ffc107; color: #000; padding: 1px 3px; border-radius: 2px',
+    terminal: { fg: '\x1b[30m', bg: '\x1b[43m' }, // Black on yellow
+  },
+  ERROR: {
+    browser:
+      'background: #f44336; color: #fff; padding: 1px 3px; border-radius: 2px',
+    terminal: { fg: '\x1b[37m', bg: '\x1b[41m' }, // White on red
+  },
+}
+
+const DEFAULT_TERMINAL_COLORS: ColorConfig = {
+  fg: '\x1b[30m', // Black
+  bg: '\x1b[47m', // White background
+}
+
+const ANSI_RESET = '\x1b[0m'
 
 function formatContext(context: unknown): unknown {
   if (context === undefined || context === null) return ''
@@ -86,26 +117,14 @@ export class Logger {
     let parts: unknown[]
 
     if (isBrowser) {
-      // Use %c to colour only the level label in browsers. Escape codes are ignored by browsers
-      const style = BROWSER_LEVEL_STYLES[levelLabel] ?? ''
+      const style = LEVEL_STYLES[levelLabel]?.browser ?? ''
       parts = [`%c ${levelLabel} `, style, key]
     } else {
-      // ANSI colours for Node / TTY targets
-      const levelColors = {
-        DEBUG: { fg: '\x1b[30m', bg: '\x1b[100m' }, // Black on gray
-        INFO: { fg: '\x1b[30m', bg: '\x1b[46m' }, // Black on cyan
-        WARN: { fg: '\x1b[30m', bg: '\x1b[43m' }, // Black on yellow
-        ERROR: { fg: '\x1b[37m', bg: '\x1b[41m' }, // White on red
-      } as const
-
-      const colors = levelColors[levelLabel as keyof typeof levelColors] || {
-        fg: '\x1b[30m', // Black
-        bg: '\x1b[47m', // White background
-      }
-      const reset = '\x1b[0m'
+      const colors =
+        LEVEL_STYLES[levelLabel]?.terminal ?? DEFAULT_TERMINAL_COLORS
       parts = [
-        `${colors.bg}${colors.fg} ${levelLabel} ${reset}`,
-        `${colors.fg}${key}${reset}`,
+        `${colors.bg}${colors.fg} ${levelLabel} ${ANSI_RESET}`,
+        `${colors.fg}${key}${ANSI_RESET}`,
       ]
     }
 

@@ -1,10 +1,10 @@
-import { createSafeActionClient } from 'next-safe-action'
-import { checkAuthenticated, checkUserTeamAuthorization } from '../utils/server'
-import { z } from 'zod'
-import { UnknownError } from '@/types/errors'
 import { l } from '@/lib/clients/logger'
-import { ActionError } from '../utils/action'
+import { UnknownError } from '@/types/errors'
+import { createSafeActionClient } from 'next-safe-action'
+import { z } from 'zod'
 import { VERBOSE } from '../../configs/flags'
+import { ActionError } from '../utils/action'
+import { checkAuthenticated } from '../utils/server'
 
 // keys that should not be logged for security/privacy reasons
 const BLACKLISTED_INPUT_KEYS = [
@@ -112,10 +112,11 @@ export const actionClient = createSafeActionClient({
 
   if (startTime) {
     const endTime = performance.now()
+    const duration = endTime - startTime
 
     l.debug(
       'ACTION_CLIENT',
-      `${actionOrFunction} '${actionOrFunctionName}' took ${endTime - startTime}ms`
+      `${actionOrFunction} '${actionOrFunctionName}' took ${duration.toFixed(2)}ms`
     )
   }
 
