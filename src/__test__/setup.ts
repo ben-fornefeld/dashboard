@@ -7,14 +7,10 @@ loadEnvConfig(projectDir)
 
 // default mocks
 vi.mock('@/lib/clients/logger', () => ({
-  logger: {
+  l: {
     error: vi.fn(),
     info: vi.fn(),
     warn: vi.fn(),
     debug: vi.fn(),
   },
-  logError: vi.fn(),
-  logInfo: vi.fn(),
-  logWarn: vi.fn(),
-  logDebug: vi.fn(),
 }))
