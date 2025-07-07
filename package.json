@@ -73,7 +73,6 @@
     "@theguild/remark-mermaid": "^0.2.0",
     "@types/mdx": "^2.0.13",
     "@types/micromatch": "^4.0.9",
-    "@types/serialize-javascript": "^5.0.4",
     "@vercel/analytics": "^1.5.0",
     "@vercel/kv": "^3.0.0",
     "cheerio": "^1.0.0",

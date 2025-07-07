@@ -1,5 +1,8 @@
-import { NextResponse, type NextRequest } from 'next/server'
 import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
+import { ALLOW_SEO_INDEXING } from './configs/flags'
+import { l } from './lib/clients/logger'
+import { getRewriteForPath } from './lib/utils/rewrites'
 import {
   getAuthRedirect,
   getUserSession,
@@ -7,9 +10,6 @@ import {
   isDashboardRoute,
   resolveTeamForDashboard,
 } from './server/middleware'
-import { getRewriteForPath } from './lib/utils/rewrites'
-import { ALLOW_SEO_INDEXING } from './configs/flags'
-import { l } from './lib/clients/logger'
 
 export async function middleware(request: NextRequest) {
   try {
@@ -102,7 +102,6 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  runtime: 'nodejs',
   matcher: [
     /*
      * Match all request paths except:
