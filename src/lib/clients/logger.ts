@@ -61,11 +61,14 @@ const supportsAnsi =
   )
 
 export class Logger {
-  /*
-   *  Overloaded method signatures ‑ available on all levels
-   *  ------------------------------------------------------
-   *  1. level(key, context)
-   *  2. level(key, message, context)
+  /**
+   * Log debug level messages (only shown when VERBOSE flag is enabled)
+   * @param key - Identifier for the log entry
+   * @param messageOrContext - Message string or context object
+   * @param maybeContext - Optional context object when message is provided
+   * @example
+   * logger.debug('INIT', 'Starting initialization', { config: { port: 3000 } })
+   * logger.debug('QUERY', { sql: 'SELECT * FROM users' })
    */
   debug(key: string, context: unknown): void
   debug(key: string, message: string, context: unknown): void
@@ -78,6 +81,15 @@ export class Logger {
     this.#log(console.debug, 'DEBUG', key, messageOrContext, maybeContext)
   }
 
+  /**
+   * Log info level messages
+   * @param key - Identifier for the log entry
+   * @param messageOrContext - Message string or context object
+   * @param maybeContext - Optional context object when message is provided
+   * @example
+   * logger.info('SERVER', 'Server started', { port: 3000 })
+   * logger.info('CACHE_HIT', { key: 'user:123' })
+   */
   info(key: string, context: unknown): void
   info(key: string, message: string, context: unknown): void
   info(
@@ -88,6 +100,15 @@ export class Logger {
     this.#log(console.info, 'INFO', key, messageOrContext, maybeContext)
   }
 
+  /**
+   * Log warning level messages
+   * @param key - Identifier for the log entry
+   * @param messageOrContext - Message string or context object
+   * @param maybeContext - Optional context object when message is provided
+   * @example
+   * logger.warn('DEPRECATED', 'This method will be removed', { method: 'oldFn' })
+   * logger.warn('HIGH_MEMORY', { usagePercent: 85 })
+   */
   warn(key: string, context: unknown): void
   warn(key: string, message: string, context: unknown): void
   warn(
@@ -98,6 +119,15 @@ export class Logger {
     this.#log(console.warn, 'WARN', key, messageOrContext, maybeContext)
   }
 
+  /**
+   * Log error level messages
+   * @param key - Identifier for the log entry
+   * @param messageOrContext - Message string or context object
+   * @param maybeContext - Optional context object when message is provided
+   * @example
+   * logger.error('DB_CONN', 'Failed to connect', { error: 'timeout' })
+   * logger.error('AUTH_FAILED', { userId: '123', reason: 'invalid_token' })
+   */
   error(key: string, context: unknown): void
   error(key: string, message: string, context: unknown): void
   error(
@@ -127,6 +157,7 @@ export class Logger {
 
     let parts: unknown[]
 
+    // check environment and format accordingly
     if (isBrowser) {
       const style = LEVEL_STYLES[levelLabel]?.browser ?? ''
       parts = [`%c ${levelLabel} `, style, key]
