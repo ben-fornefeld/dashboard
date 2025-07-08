@@ -100,7 +100,7 @@ export const actionClient = createSafeActionClient({
       }
     )
   } else {
-    l.debug(
+    l.info(
       'ACTION_CLIENT',
       `${actionOrFunction} '${actionOrFunctionName}' succeeded:`,
       {
@@ -114,7 +114,7 @@ export const actionClient = createSafeActionClient({
     const endTime = performance.now()
     const duration = endTime - startTime
 
-    l.debug(
+    l.info(
       'ACTION_CLIENT',
       `${actionOrFunction} '${actionOrFunctionName}' took ${duration.toFixed(2)}ms`
     )

@@ -56,6 +56,24 @@ const supportsAnsi =
 
 export class Logger {
   /**
+   * Log messages at a specific level
+   * @param level - Log level (DEBUG, INFO, WARN, ERROR)
+   * @param key - Identifier for the log entry
+   * @param messageOrContext - Message string or context object
+   * @param maybeContext - Optional context object when message is provided
+   */
+  log(level: string, key: string, context: unknown): void
+  log(level: string, key: string, message: string, context: unknown): void
+  log(
+    level: string,
+    key: string,
+    messageOrContext: string | unknown,
+    maybeContext?: unknown
+  ): void {
+    this.#log(console.log, level, key, messageOrContext, maybeContext)
+  }
+
+  /**
    * Log debug level messages (only shown when VERBOSE flag is enabled)
    * @param key - Identifier for the log entry
    * @param messageOrContext - Message string or context object
@@ -71,7 +89,8 @@ export class Logger {
     messageOrContext: string | unknown,
     maybeContext?: unknown
   ): void {
-    if (!VERBOSE) return // debug disabled unless VERBOSE flag enabled
+    if (!VERBOSE) return
+
     this.#log(console.debug, 'DEBUG', key, messageOrContext, maybeContext)
   }
 
@@ -91,6 +110,8 @@ export class Logger {
     messageOrContext: string | unknown,
     maybeContext?: unknown
   ): void {
+    if (!VERBOSE) return
+
     this.#log(console.info, 'INFO', key, messageOrContext, maybeContext)
   }
 
