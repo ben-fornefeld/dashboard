@@ -1,67 +1,38 @@
-import { VERBOSE } from '@/configs/flags'
+// unified logger that preserves the previous class API (overloads)
+// while delegating the actual write to a runtime-specific implementation
+/* eslint-disable */
 
-const isBrowser =
-  typeof window !== 'undefined' && typeof window.document !== 'undefined'
-
-type ColorConfig = {
-  fg: string
-  bg: string
+// ---------------------------------------------------------------------------
+// Minimal interface every runtime variant must expose
+// ---------------------------------------------------------------------------
+export type RuntimeLogger = {
+  debug: (...args: unknown[]) => void
+  info: (...args: unknown[]) => void
+  warn: (...args: unknown[]) => void
+  error: (...args: unknown[]) => void
 }
+// ---------------------------------------------------------------------------
+// Pick implementation at runtime (Node, Edge, Browser)
+// ---------------------------------------------------------------------------
+const runtimeImpl: RuntimeLogger = (() => {
+  if (typeof window !== 'undefined') {
+    return require('./logger.browser').logger as RuntimeLogger
+  }
+  if (process.env.NEXT_RUNTIME === 'edge') {
+    return require('./logger.edge').logger as RuntimeLogger
+  }
+  return require('./logger.node').logger as RuntimeLogger
+})()
 
-type LevelConfig = {
-  browser: string // CSS style string
-  terminal: ColorConfig // ANSI color codes
-}
-
-const LEVEL_STYLES: Record<string, LevelConfig> = {
-  DEBUG: {
-    browser:
-      'background: #9e9e9e; color: #000; padding: 1px 3px; border-radius: 2px',
-    terminal: { fg: '\x1b[30m', bg: '\x1b[100m' }, // Black on gray
-  },
-  INFO: {
-    browser:
-      'background: #00bcd4; color: #000; padding: 1px 3px; border-radius: 2px',
-    terminal: { fg: '\x1b[30m', bg: '\x1b[46m' }, // Black on cyan
-  },
-  WARN: {
-    browser:
-      'background: #ffc107; color: #000; padding: 1px 3px; border-radius: 2px',
-    terminal: { fg: '\x1b[30m', bg: '\x1b[43m' }, // Black on yellow
-  },
-  ERROR: {
-    browser:
-      'background: #f44336; color: #fff; padding: 1px 3px; border-radius: 2px',
-    terminal: { fg: '\x1b[37m', bg: '\x1b[41m' }, // White on red
-  },
-}
-
-const DEFAULT_TERMINAL_COLORS: ColorConfig = {
-  fg: '\x1b[30m', // Black
-  bg: '\x1b[47m', // White background
-}
-
-const ANSI_RESET = '\x1b[0m'
-
-const supportsAnsi =
-  !isBrowser &&
-  typeof process !== 'undefined' &&
-  !!process.stdout &&
-  !!process.stdout.isTTY &&
-  !(
-    'NO_COLOR' in process.env ||
-    'NODE_DISABLE_COLORS' in process.env ||
-    process.env.FORCE_COLOR === '0'
-  )
-
+// ---------------------------------------------------------------------------
+// Public Logger class – API identical to the former implementation
+// ---------------------------------------------------------------------------
 export class Logger {
-  /**
-   * Log messages at a specific level
-   * @param level - Log level (DEBUG, INFO, WARN, ERROR)
-   * @param key - Identifier for the log entry
-   * @param messageOrContext - Message string or context object
-   * @param maybeContext - Optional context object when message is provided
-   */
+  constructor(private readonly impl: RuntimeLogger) {}
+
+  // -----------------------------------------------------------------------
+  // log (generic) ----------------------------------------------------------
+  // -----------------------------------------------------------------------
   log(level: string, key: string, context: unknown): void
   log(level: string, key: string, message: string, context: unknown): void
   log(
@@ -69,131 +40,88 @@ export class Logger {
     key: string,
     messageOrContext: string | unknown,
     maybeContext?: unknown
-  ): void {
-    this.#log(console.log, level, key, messageOrContext, maybeContext)
+  ) {
+    this.#emit(level.toLowerCase(), key, messageOrContext, maybeContext)
   }
 
-  /**
-   * Log debug level messages (only shown when VERBOSE flag is enabled)
-   * @param key - Identifier for the log entry
-   * @param messageOrContext - Message string or context object
-   * @param maybeContext - Optional context object when message is provided
-   * @example
-   * logger.debug('INIT', 'Starting initialization', { config: { port: 3000 } })
-   * logger.debug('QUERY', { sql: 'SELECT * FROM users' })
-   */
+  // -----------------------------------------------------------------------
+  // debug ------------------------------------------------------------------
+  // -----------------------------------------------------------------------
   debug(key: string, context: unknown): void
   debug(key: string, message: string, context: unknown): void
   debug(
     key: string,
     messageOrContext: string | unknown,
     maybeContext?: unknown
-  ): void {
-    if (!VERBOSE) return
-
-    this.#log(console.debug, 'DEBUG', key, messageOrContext, maybeContext)
+  ) {
+    this.#emit('debug', key, messageOrContext, maybeContext)
   }
 
-  /**
-   * Log info level messages
-   * @param key - Identifier for the log entry
-   * @param messageOrContext - Message string or context object
-   * @param maybeContext - Optional context object when message is provided
-   * @example
-   * logger.info('SERVER', 'Server started', { port: 3000 })
-   * logger.info('CACHE_HIT', { key: 'user:123' })
-   */
+  // -----------------------------------------------------------------------
+  // info -------------------------------------------------------------------
+  // -----------------------------------------------------------------------
   info(key: string, context: unknown): void
   info(key: string, message: string, context: unknown): void
   info(
     key: string,
     messageOrContext: string | unknown,
     maybeContext?: unknown
-  ): void {
-    if (!VERBOSE) return
-
-    this.#log(console.info, 'INFO', key, messageOrContext, maybeContext)
+  ) {
+    this.#emit('info', key, messageOrContext, maybeContext)
   }
 
-  /**
-   * Log warning level messages
-   * @param key - Identifier for the log entry
-   * @param messageOrContext - Message string or context object
-   * @param maybeContext - Optional context object when message is provided
-   * @example
-   * logger.warn('DEPRECATED', 'This method will be removed', { method: 'oldFn' })
-   * logger.warn('HIGH_MEMORY', { usagePercent: 85 })
-   */
+  // -----------------------------------------------------------------------
+  // warn -------------------------------------------------------------------
+  // -----------------------------------------------------------------------
   warn(key: string, context: unknown): void
   warn(key: string, message: string, context: unknown): void
   warn(
     key: string,
     messageOrContext: string | unknown,
     maybeContext?: unknown
-  ): void {
-    this.#log(console.warn, 'WARN', key, messageOrContext, maybeContext)
+  ) {
+    this.#emit('warn', key, messageOrContext, maybeContext)
   }
 
-  /**
-   * Log error level messages
-   * @param key - Identifier for the log entry
-   * @param messageOrContext - Message string or context object
-   * @param maybeContext - Optional context object when message is provided
-   * @example
-   * logger.error('DB_CONN', 'Failed to connect', { error: 'timeout' })
-   * logger.error('AUTH_FAILED', { userId: '123', reason: 'invalid_token' })
-   */
+  // -----------------------------------------------------------------------
+  // error ------------------------------------------------------------------
+  // -----------------------------------------------------------------------
   error(key: string, context: unknown): void
   error(key: string, message: string, context: unknown): void
   error(
     key: string,
     messageOrContext: string | unknown,
     maybeContext?: unknown
-  ): void {
-    this.#log(console.error, 'ERROR', key, messageOrContext, maybeContext)
+  ) {
+    this.#emit('error', key, messageOrContext, maybeContext)
   }
 
-  #log(
-    fn: (...args: unknown[]) => void,
-    levelLabel: string,
+  // -----------------------------------------------------------------------
+  // private helpers --------------------------------------------------------
+  // -----------------------------------------------------------------------
+  #emit(
+    level: keyof RuntimeLogger | string,
     key: string,
     messageOrContext: string | unknown,
     maybeContext?: unknown
-  ): void {
-    let message: string | undefined
-    let context: unknown
+  ) {
+    const msg =
+      typeof messageOrContext === 'string' ? messageOrContext : undefined
+    const ctx =
+      typeof messageOrContext === 'string' ? maybeContext : messageOrContext
 
-    if (typeof messageOrContext === 'string') {
-      message = messageOrContext
-      context = maybeContext
+    const payload = { key, ...(ctx !== undefined ? { ctx } : {}) }
+
+    const implMap = this.impl as Record<string, (...a: unknown[]) => void>
+    const method = (implMap[level] ?? this.impl.info).bind(this.impl)
+    if (msg !== undefined) {
+      method(payload, msg)
     } else {
-      context = messageOrContext
+      method(payload)
     }
-
-    let parts: unknown[]
-
-    // check environment and format accordingly
-    if (isBrowser) {
-      const style = LEVEL_STYLES[levelLabel]?.browser ?? ''
-      parts = [`%c ${levelLabel} `, style, key]
-    } else if (supportsAnsi) {
-      const colors =
-        LEVEL_STYLES[levelLabel]?.terminal ?? DEFAULT_TERMINAL_COLORS
-      parts = [
-        `${colors.bg}${colors.fg} ${levelLabel} ${ANSI_RESET}`,
-        `${key}${ANSI_RESET}`,
-      ]
-    } else {
-      parts = [`${levelLabel} | `, key]
-    }
-
-    if (message) parts.push(message)
-    if (context !== undefined) {
-      parts.push('\n', context)
-    }
-
-    fn(...parts)
   }
 }
 
-export const l = new Logger()
+// Re-export singleton used across the code-base.
+export const l = new Logger(runtimeImpl)
+export const logger = l
