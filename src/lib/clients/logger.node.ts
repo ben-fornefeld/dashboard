@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import { context, trace } from '@opentelemetry/api'
 import type { IncomingMessage, ServerResponse } from 'http'
 import pino from 'pino'
 
@@ -18,6 +19,13 @@ const isDev = process.env.NODE_ENV !== 'production'
 export const baseLogger = pino({
   timestamp: pino.stdTimeFunctions.isoTime,
   level: process.env.LOG_LEVEL || (isDev ? 'debug' : 'info'),
+
+  mixin() {
+    const span = trace.getSpan(context.active())
+    if (!span) return {}
+    const { traceId, spanId } = span.spanContext()
+    return { traceId, spanId }
+  },
 })
 
 /**
