@@ -13,6 +13,8 @@ import {
 
 export async function middleware(request: NextRequest) {
   try {
+    l.debug('MIDDLEWARE:START', { url: request.url })
+
     // Catch-all route rewrite paths should not be handled by middleware
     // NOTE: We don't handle this via config matchers, because nextjs configs need to be static
     const { config: routeRewriteConfig } = getRewriteForPath(
@@ -21,6 +23,9 @@ export async function middleware(request: NextRequest) {
     )
 
     if (routeRewriteConfig) {
+      l.debug('MIDDLEWARE:ROUTE_REWRITE_SKIP', {
+        pathname: request.nextUrl.pathname,
+      })
       return NextResponse.next({
         request,
       })
@@ -33,6 +38,10 @@ export async function middleware(request: NextRequest) {
     )
 
     if (middlewareRewriteConfig) {
+      l.debug('MIDDLEWARE:REWRITE', {
+        pathname: request.nextUrl.pathname,
+        domain: middlewareRewriteConfig.domain,
+      })
       const rewriteUrl = new URL(request.url)
       rewriteUrl.hostname = middlewareRewriteConfig.domain
       rewriteUrl.protocol = 'https'
@@ -74,18 +83,30 @@ export async function middleware(request: NextRequest) {
     )
 
     const { error, data } = await getUserSession(supabase)
+    l.debug('MIDDLEWARE:USER_SESSION', {
+      error: !!error,
+      hasUser: !!data?.user,
+    })
 
     // Handle authentication redirects
     const authRedirect = getAuthRedirect(request, !error)
-    if (authRedirect) return authRedirect
+    if (authRedirect) {
+      l.debug('MIDDLEWARE:AUTH_REDIRECT')
+      return authRedirect
+    }
 
     // Early return for non-dashboard routes or no user
     if (!data?.user || !isDashboardRoute(request.nextUrl.pathname)) {
+      l.debug('MIDDLEWARE:SKIP', {
+        hasDashboardRoute: isDashboardRoute(request.nextUrl.pathname),
+        hasUser: !!data?.user,
+      })
       return response
     }
 
     // Handle team resolution for all dashboard routes
     const teamResult = await resolveTeamForDashboard(request, data.user.id)
+    l.debug('MIDDLEWARE:TEAM_RESOLUTION', { hasTeamResult: !!teamResult })
 
     // Process team resolution result
     return handleTeamResolution(request, response, teamResult)

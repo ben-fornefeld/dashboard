@@ -11,10 +11,16 @@ function getRewriteForPath(
   path: string,
   configType: RewriteConfigType
 ): RewriteConfig {
+  l.debug('GET_REWRITE_FOR_PATH', { path, configType })
+
   const config =
     configType === 'route' ? ROUTE_REWRITE_CONFIG : MIDDLEWARE_REWRITE_CONFIG
 
   for (const domainConfig of config) {
+    l.debug('GET_REWRITE_FOR_PATH:DOMAIN_CONFIG', {
+      domain: domainConfig.domain,
+    })
+
     const isIndex = path === '/' || path === ''
 
     const matchingRule = domainConfig.rules.find((rule) => {
@@ -31,6 +37,11 @@ function getRewriteForPath(
     })
 
     if (matchingRule) {
+      l.debug('GET_REWRITE_FOR_PATH:MATCH_FOUND', {
+        domain: domainConfig.domain,
+        rulePath: matchingRule.path,
+      })
+
       return {
         config: domainConfig,
         rule: matchingRule,
@@ -38,6 +49,7 @@ function getRewriteForPath(
     }
   }
 
+  l.debug('GET_REWRITE_FOR_PATH:NO_MATCH')
   return { config: null, rule: null }
 }
 

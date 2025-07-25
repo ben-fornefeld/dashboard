@@ -16,29 +16,43 @@ const REVALIDATE_TIME = 900 // 15 minutes ttl
 
 export async function GET(request: NextRequest): Promise<Response> {
   const url = new URL(request.url)
+  l.debug('CATCHALL:START', { url: url.toString() })
 
   const requestHostname = url.hostname
+  l.debug('CATCHALL:REQUEST_HOSTNAME', { hostname: requestHostname })
 
   const updateUrlHostname = (newHostname: string) => {
     url.hostname = newHostname
     url.port = ''
     url.protocol = 'https'
+    l.debug('CATCHALL:UPDATE_URL_HOSTNAME', {
+      newHostname,
+      updatedUrl: url.toString(),
+    })
   }
 
   const { config, rule } = getRewriteForPath(url.pathname, 'route')
+  l.debug('CATCHALL:REWRITE_CONFIG', { hasConfig: !!config, hasRule: !!rule })
 
   if (config) {
     if (rule && rule.pathPreprocessor) {
+      const originalPath = url.pathname
       url.pathname = rule.pathPreprocessor(url.pathname)
+      l.debug('CATCHALL:PATH_PREPROCESSOR', {
+        originalPath,
+        newPath: url.pathname,
+      })
     }
     updateUrlHostname(config.domain)
   }
 
   try {
     const notFound = url.hostname === requestHostname
+    l.debug('CATCHALL:NOT_FOUND_CHECK', { notFound })
 
     // if hostname did not change, we want to make sure it does not cache the route based on the build times hostname (127.0.0.1:3000)
     const fetchUrl = notFound ? `${BASE_URL}/not-found` : url.toString()
+    l.debug('CATCHALL:FETCH_URL', { fetchUrl })
 
     const res = await fetch(fetchUrl, {
       headers: new Headers(request.headers),
@@ -52,12 +66,15 @@ export async function GET(request: NextRequest): Promise<Response> {
             },
           }),
     })
+    l.debug('CATCHALL:FETCH_RESPONSE', { status: res.status })
 
     const contentType = res.headers.get('Content-Type')
     const newHeaders = new Headers(res.headers)
+    l.debug('CATCHALL:CONTENT_TYPE', { contentType })
 
     if (contentType?.startsWith('text/html')) {
       let html = await res.text()
+      l.debug('CATCHALL:HTML_RESPONSE', { htmlLength: html.length })
 
       // remove content-encoding header to ensure proper rendering
       newHeaders.delete('content-encoding')
@@ -65,6 +82,7 @@ export async function GET(request: NextRequest): Promise<Response> {
       // rewrite absolute URLs pointing to the rewritten domain to relative paths and with correct SEO tags
       if (config) {
         const rewrittenPrefix = `https://${config.domain}`
+        l.debug('CATCHALL:REWRITE_HTML', { rewrittenPrefix })
 
         html = rewriteContentPagesHtml(html, {
           seo: {
@@ -80,13 +98,15 @@ export async function GET(request: NextRequest): Promise<Response> {
         status: notFound ? 404 : res.status,
         headers: newHeaders,
       })
+      l.debug('CATCHALL:MODIFIED_RESPONSE', { status: modifiedResponse.status })
 
       return modifiedResponse
     }
 
+    l.debug('CATCHALL:NON_HTML_RESPONSE')
     return res
   } catch (error) {
-    l.error('URL_REWRITE:UNEXPECTED_ERROR', error)
+    l.error('CATCHALL:UNEXPECTED_ERROR', error)
 
     return new Response(
       `Proxy Error: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -99,7 +119,11 @@ export async function GET(request: NextRequest): Promise<Response> {
 }
 
 export async function generateStaticParams() {
+  l.debug('CATCHALL:GENERATE_STATIC_PARAMS:START')
   const sitemapEntries = await sitemap()
+  l.debug('CATCHALL:GENERATE_STATIC_PARAMS:SITEMAP', {
+    entriesCount: sitemapEntries.length,
+  })
 
   const slugs = sitemapEntries
     .filter((entry) => {
@@ -120,6 +144,10 @@ export async function generateStaticParams() {
         })
 
         if (matchingRule) {
+          l.debug('CATCHALL:GENERATE_STATIC_PARAMS:MATCH_FOUND', {
+            pathname,
+            domain: domainConfig.domain,
+          })
           return true
         }
       }
@@ -132,8 +160,11 @@ export async function generateStaticParams() {
       const pathSegments = pathname
         .split('/')
         .filter((segment) => segment !== '')
-      return pathSegments.length ? { slug: pathSegments } : { slug: [] }
+      return { slug: pathSegments.length > 0 ? pathSegments : undefined }
     })
 
+  l.debug('CATCHALL:GENERATE_STATIC_PARAMS:COMPLETE', {
+    slugCount: slugs.length,
+  })
   return slugs
 }

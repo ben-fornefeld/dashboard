@@ -3,9 +3,13 @@
 // interface so that the rest of the codebase can depend on the `logger` shape without
 // pulling the full Winston implementation into an edge bundle.
 
+import { VERBOSE } from '@/configs/flags'
+
 const logger = {
   debug: (...args: unknown[]) => {
-    console.debug(...args)
+    if (!VERBOSE) return
+
+    console.info(...args)
     return logger
   },
   info: (...args: unknown[]) => {
