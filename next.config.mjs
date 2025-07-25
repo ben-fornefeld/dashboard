@@ -13,6 +13,7 @@ const config = {
       dynamic: 180,
       static: 180,
     },
+    nodeMiddleware: true,
     serverActions: {
       bodySizeLimit: '5mb',
     },
