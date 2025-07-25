@@ -9,7 +9,7 @@
 import type { Logger } from 'winston'
 
 const loggerImpl = ((): Logger => {
-  if (process.env.NEXT_RUNTIME === 'nodejs') {
+  if (process.env.NEXT_RUNTIME === 'nodejs' && !process.env.CI) {
     // eslint-disable-next-line @typescript-eslint/no-require-imports
     return require('./logger.node').logger as Logger
   }

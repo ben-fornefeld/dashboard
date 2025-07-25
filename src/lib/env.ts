@@ -13,6 +13,8 @@ export const serverSchema = z.object({
   VERCEL_URL: z.string().optional(),
   VERCEL_PROJECT_PRODUCTION_URL: z.string().optional(),
   VERCEL_BRANCH_URL: z.string().optional(),
+  // vercel build time indicator
+  CI: z.string().optional(),
 })
 
 export const clientSchema = z.object({
