@@ -132,7 +132,7 @@ export async function generateStaticParams() {
       const pathSegments = pathname
         .split('/')
         .filter((segment) => segment !== '')
-      return { slug: pathSegments.length > 0 ? pathSegments : undefined }
+      return pathSegments.length ? { slug: pathSegments } : { slug: [] }
     })
 
   return slugs
