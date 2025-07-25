@@ -1,5 +1,3 @@
-import type { Logger } from 'winston'
-
 // Simple logger that wraps console methods for Edge and Browser environments.
 // We only implement the methods we actually use and cast the result to Winston's `Logger`
 // interface so that the rest of the codebase can depend on the `logger` shape without
@@ -22,6 +20,6 @@ const logger = {
     console.error(...args)
     return logger
   },
-} as unknown as Logger
+}
 
 export { logger }
